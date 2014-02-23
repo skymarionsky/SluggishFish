@@ -45,7 +45,8 @@ class MenuState extends FlxState
 	
 	private function onDisplayTitleEnd(tween:FlxTween):Void
 	{
-		var startText:FlxText = new FlxText(0, Std.int(FlxG.height*0.75), FlxG.width, "click or space to start");
+		var startText:FlxText = new FlxText(0, Std.int(FlxG.height * 0.75), FlxG.width, "click or space to start");
+		//startText.setBorderStyle(FlxText.BORDER_OUTLINE);
 		startText.alignment = "center";
 		tween = FlxTween.multiVar(startText, { alpha:0 }, 2.5, { type:FlxTween.LOOPING, ease: FlxEase.expoIn });
 		add(startText);

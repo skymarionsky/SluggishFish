@@ -9,6 +9,7 @@ import flixel.ui.FlxButton;
 import flixel.util.FlxMath;
 import flixel.util.FlxRandom;
 import flixel.util.FlxTimer;
+import flixel.util.FlxCollision;
 
 /**
  * A FlxState which can be used for the actual gameplay.
@@ -18,15 +19,19 @@ class PlayState extends FlxState
 	var player:Player;
 	var arrows:Array<FlxSprite>;
 	var oceans:Array<FlxSprite>;
+	var enemies:Array<Enemy>;
 	var startText:FlxText;
 	var gameoverText:FlxText;
 	var scoreText:FlxText;
 	var waitText:FlxText;
+	
 	var isPaused:Bool = true;
 	var isGameoverWaiting:Bool = false;
 	
-	private var _oceanSpeed = -0.2;
-	private var _deadZone = 0;
+	private var _oceanSpeed:Float = -0.4;
+	private var _deadZone:Float = -4;
+	private var _nextEnemySpawn:Float = 0;
+	private var _nextEnemyInterval:Float = 80;
 	
 	
 	/**
@@ -44,6 +49,9 @@ class PlayState extends FlxState
 		player.toCenter();
 		player.animation.play("sleep");
 		add(player);
+		
+		// enemy init
+		enemies = new Array<Enemy>();
 		
 		// wait for start
 		waitForStart();
@@ -64,7 +72,8 @@ class PlayState extends FlxState
 			arrows.push(arrow);
 		}
 		// text
-		startText = new FlxText(FlxG.width>>1, FlxG.height>>3, FlxG.width>>2, "click or space to swim");
+		startText = new FlxText(FlxG.width >> 1, FlxG.height >> 3, FlxG.width >> 2, "click or space to swim");
+		//startText.setBorderStyle(FlxText.BORDER_OUTLINE);
 		add(startText);
 		// oceans
 		oceans = new Array<FlxSprite>();
@@ -88,12 +97,15 @@ class PlayState extends FlxState
 	{
 		isGameoverWaiting = true;
 		gameoverText = new FlxText(0, FlxG.height >> 2, FlxG.width, "Game Over");
+		gameoverText.setBorderStyle(FlxText.BORDER_OUTLINE);
 		gameoverText.alignment = "center";
 		add(gameoverText);
 		scoreText = new FlxText(0, FlxG.height >> 1, FlxG.width, "Score: " + Reg.score);
+		scoreText.setBorderStyle(FlxText.BORDER_OUTLINE);
 		scoreText.alignment = "center";
 		add(scoreText);
 		waitText = new FlxText(0, FlxG.height -(FlxG.height >> 2), FlxG.width, "click or space to continue");
+		waitText.setBorderStyle(FlxText.BORDER_OUTLINE);
 		waitText.alignment = "center";
 		add(waitText);
 	}
@@ -107,7 +119,12 @@ class PlayState extends FlxState
 		super.destroy();
 		player = null;
 		arrows = null;
+		oceans = null;
+		enemies = null;
 		startText = null;
+		gameoverText = null;
+		scoreText = null;
+		waitText = null;		
 	}
 
 	/**
@@ -142,15 +159,65 @@ class PlayState extends FlxState
 						oceans[i].x = FlxG.width;
 					}
 				}
+				// move enemy
+				var isHit = false;
+				for (i in 0...enemies.length) {
+					enemies[i].x += _oceanSpeed;
+					// hit test
+					if (player.x <= enemies[i].x + enemies[i].width && player.x + player.width >= enemies[i].x) {
+						if (FlxCollision.pixelPerfectCheck(player, enemies[i])) {
+							isHit = true;
+							break;
+						}
+						if (!enemies[i].isScored && enemies[i].x+(enemies[i].width/2) < player.x+(player.width/2)) {
+							Reg.score += 1;
+							enemies[i].isScored = true;
+						}
+					}
+				}
+				if (isHit) {
+					player.dead();
+					onGameover();
+					return;
+				}
+				if (enemies.length > 1 && enemies[0].x <= -32) {
+					enemies[0].destroy();
+					enemies.shift();
+				}
+				// spawn new enemy
+				if (_nextEnemySpawn <= 0) {
+					var ry:Int = FlxRandom.intRanged(5, 45);
+					enemies.push(addEnemy(FlxG.width, ry));
+					if (Reg.score >= 1 ) {
+						var rnd:Int = (Reg.score > 10)?2:((Reg.score > 5)?3:4);
+						if (FlxRandom.intRanged(0, rnd) == 0) {
+							enemies.push(addEnemy(FlxG.width,FlxRandom.intRanged(ry+32, FlxG.height-32)));
+						}
+					}
+					_nextEnemySpawn = _nextEnemyInterval;
+				}
+				_nextEnemySpawn += _oceanSpeed;
 				if (player.y <= _deadZone) {
 					player.dead();
 					onGameover();
 				}
 				// swim
 				if (FlxG.keys.justPressed.SPACE || FlxG.mouse.justReleased) {
-					player.swim();
+					if (player.y < FlxG.height - player.height) {
+						player.swim();
+					}
 				}
 			}
 		}
+	}
+	
+	function addEnemy(x:Int, y:Int):Enemy
+	{
+		var enemy = new Enemy(x, y);
+		enemy.loadGraphic("assets/images/jellyfish.png", true, false, 32, 32);
+		enemy.animation.add("idle", [0, 1], 5, true);
+		enemy.animation.play("idle");
+		add(enemy);
+		return enemy;
 	}
 }

@@ -49,7 +49,7 @@ class Player extends FlxSprite
 			animation.play("swim");
 		}
 		
-		trace(velocity.y);
+		//trace(y);
 	}
 	
 	public function dead():Void
