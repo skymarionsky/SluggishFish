@@ -28,8 +28,6 @@ class LightEffects extends FlxSprite
 		trace("addLight32");
 		var light:FlxSprite;
 		light = new FlxSprite(x, y, "assets/images/light32.png");
-		trace(x);
-		trace(y);
 		light.blend = BlendMode.SCREEN;
 		var id = lights.push(light) - 1;
 		return light;
@@ -38,12 +36,20 @@ class LightEffects extends FlxSprite
 	public function addLight64(x:Int=0, y:Int=0)
 	{
 		var light:FlxSprite;
-		light = new FlxSprite(x, y, "assets/images/light32.png");
+		light = new FlxSprite(x, y, "assets/images/light64.png");
 		light.blend = BlendMode.SCREEN;
 		var id = lights.push(light) - 1;
 		return light;
 	}
-
+	
+	public function addLight128(x:Int = 0, y:Int = 0)
+	{
+		var light:FlxSprite;
+		light = new FlxSprite(x, y, "assets/images/light128.png");
+		light.blend = BlendMode.SCREEN;
+		var id = lights.push(light) - 1;
+		return light;
+	}
 	
 	override public function update()
 	{

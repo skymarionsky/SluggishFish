@@ -10,12 +10,16 @@ import flixel.util.FlxMath;
 import flixel.util.FlxRandom;
 import flixel.util.FlxTimer;
 import flixel.util.FlxCollision;
+import flixel.group.FlxTypedGroup;
 
 /**
  * A FlxState which can be used for the actual gameplay.
  */
 class PlayState extends FlxState
 {
+	var layer:FlxTypedGroup<FlxSprite>;
+	var lightEffect:LightEffects;
+	var light:FlxSprite;
 	var player:Player;
 	var arrows:Array<FlxSprite>;
 	var oceans:Array<FlxSprite>;
@@ -28,10 +32,10 @@ class PlayState extends FlxState
 	var isPaused:Bool = true;
 	var isGameoverWaiting:Bool = false;
 	
-	private var _oceanSpeed:Float = -0.4;
-	private var _deadZone:Float = -4;
-	private var _nextEnemySpawn:Float = 0;
-	private var _nextEnemyInterval:Float = 80;
+	var _oceanSpeed:Float = -0.4;
+	var _deadZone:Float = -4;
+	var _nextEnemySpawn:Float = 0;
+	var _nextEnemyInterval:Float = 80;
 	
 	
 	/**
@@ -41,17 +45,29 @@ class PlayState extends FlxState
 	{
 		super.create();
 		
-		// setup
+		// visual setup
 		FlxG.cameras.bgColor = Reg.bgColor;
+		lightEffect = new LightEffects();
+		light = lightEffect.addLight128();
+		
+		// layer
+		layer = new FlxTypedGroup<FlxSprite>();
+		add(layer);
 		
 		// player
 		player = new Player(FlxG.width / 3, FlxG.height / 2);
 		player.toCenter();
 		player.animation.play("sleep");
-		add(player);
+		layer.add(player);
 		
 		// enemy init
 		enemies = new Array<Enemy>();
+		
+		// add light effect
+		light.x = player.x + player.width/2 - light.width/2;
+		light.y = player.y + player.width/2 - light.height/2;
+		add(lightEffect);
+		lightEffect.visible = false;
 		
 		// wait for start
 		waitForStart();
@@ -82,7 +98,7 @@ class PlayState extends FlxState
 			ocean.loadGraphic("assets/images/ocean.png", true, false, 8, 4);
 			ocean.animation.add("wave", [0, 1, 2, 3], FlxRandom.intRanged(6,10), true);
 			ocean.animation.play("wave");
-			add(ocean);
+			layer.add(ocean);
 			oceans.push(ocean);
 		}
 		
@@ -136,6 +152,7 @@ class PlayState extends FlxState
 		if (isPaused) {
 			// click or space to start
 			if (FlxG.keys.justPressed.SPACE || FlxG.mouse.justReleased) {
+				lightEffect.visible = true;
 				isPaused = false;
 				player.isMoving = true;
 				player.swim();
@@ -208,6 +225,8 @@ class PlayState extends FlxState
 					}
 				}
 			}
+			light.x = player.x + player.width/2 - light.width/2;
+			light.y = player.y + player.width/2 - light.height/2;
 		}
 	}
 	
@@ -217,7 +236,7 @@ class PlayState extends FlxState
 		enemy.loadGraphic("assets/images/jellyfish.png", true, false, 32, 32);
 		enemy.animation.add("idle", [0, 1], 5, true);
 		enemy.animation.play("idle");
-		add(enemy);
+		layer.add(enemy);
 		return enemy;
 	}
 }
