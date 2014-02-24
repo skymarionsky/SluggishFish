@@ -5,6 +5,8 @@ import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.FlxState;
 import flixel.text.FlxText;
+import flixel.tweens.FlxTween;
+import flixel.tweens.misc.VarTween;
 import flixel.ui.FlxButton;
 import flixel.util.FlxMath;
 import flixel.util.FlxRandom;
@@ -28,6 +30,8 @@ class PlayState extends FlxState
 	var gameoverText:FlxText;
 	var scoreText:FlxText;
 	var waitText:FlxText;
+	var currentScoreText:FlxText;
+	var currentScoreTween:FlxTween;
 	
 	var isPaused:Bool = true;
 	var isGameoverWaiting:Bool = false;
@@ -35,7 +39,8 @@ class PlayState extends FlxState
 	var _oceanSpeed:Float = -0.4;
 	var _deadZone:Float = -4;
 	var _nextEnemySpawn:Float = 0;
-	var _nextEnemyInterval:Float = 80;
+	var _nextEnemyInterval:Int = 80;
+	var _nextEnemyIntervalMin:Int = 40;
 	
 	
 	/**
@@ -69,12 +74,19 @@ class PlayState extends FlxState
 		add(lightEffect);
 		lightEffect.visible = false;
 		
+		// add text after light
+		currentScoreText = new FlxText(0, 0, FlxG.width);
+		currentScoreText.alignment = "center";
+		currentScoreText.visible = false;
+		add(currentScoreText);
+		
 		// wait for start
 		waitForStart();
 	}
 	
 	function waitForStart():Void
 	{
+		Reg.score = 0;
 		isPaused = true;
 		player.isMoving = false;
 		// arrows
@@ -152,7 +164,7 @@ class PlayState extends FlxState
 		if (isPaused) {
 			// click or space to start
 			if (FlxG.keys.justPressed.SPACE || FlxG.mouse.justReleased) {
-				lightEffect.visible = true;
+				FlxG.camera.fade(0xFF000000, 3.0, false, onStartLightEffect);
 				isPaused = false;
 				player.isMoving = true;
 				player.swim();
@@ -182,13 +194,17 @@ class PlayState extends FlxState
 					enemies[i].x += _oceanSpeed;
 					// hit test
 					if (player.x <= enemies[i].x + enemies[i].width && player.x + player.width >= enemies[i].x) {
-						if (FlxCollision.pixelPerfectCheck(player, enemies[i])) {
+						if (player.overlaps(enemies[i])) {
+						//if (FlxCollision.pixelPerfectCheck(player, enemies[i], 1)) {
 							isHit = true;
 							break;
 						}
 						if (!enemies[i].isScored && enemies[i].x+(enemies[i].width/2) < player.x+(player.width/2)) {
+							// score
 							Reg.score += 1;
 							enemies[i].isScored = true;
+							FlxG.sound.play("assets/sounds/score.wav");
+							displayCurrentScore();
 						}
 					}
 				}
@@ -206,12 +222,12 @@ class PlayState extends FlxState
 					var ry:Int = FlxRandom.intRanged(5, 45);
 					enemies.push(addEnemy(FlxG.width, ry));
 					if (Reg.score >= 1 ) {
-						var rnd:Int = (Reg.score > 10)?2:((Reg.score > 5)?3:4);
+						var rnd:Int = (Reg.score > 10)?1:((Reg.score > 5)?2:3);
 						if (FlxRandom.intRanged(0, rnd) == 0) {
 							enemies.push(addEnemy(FlxG.width,FlxRandom.intRanged(ry+32, FlxG.height-32)));
 						}
 					}
-					_nextEnemySpawn = _nextEnemyInterval;
+					_nextEnemySpawn = FlxRandom.intRanged(_nextEnemyIntervalMin,_nextEnemyInterval);
 				}
 				_nextEnemySpawn += _oceanSpeed;
 				if (player.y <= _deadZone) {
@@ -236,7 +252,30 @@ class PlayState extends FlxState
 		enemy.loadGraphic("assets/images/jellyfish.png", true, false, 32, 32);
 		enemy.animation.add("idle", [0, 1], 5, true);
 		enemy.animation.play("idle");
+		enemy.width = 22;
+		enemy.height = 24;
+		enemy.offset.x = 4;
+		enemy.offset.y = 2;
 		layer.add(enemy);
 		return enemy;
+	}
+	
+	function displayCurrentScore():Void
+	{
+		currentScoreText.text = Std.string(Reg.score);
+		currentScoreText.visible = true;
+		currentScoreTween = FlxTween.singleVar(currentScoreText, "alpha", 0, 1, {complete:onDisplayCurrentScoreEnd});
+	}
+	
+	function onDisplayCurrentScoreEnd(tween:FlxTween):Void
+	{
+		currentScoreText.visible = false;
+		currentScoreText.alpha = 1;
+	}
+	
+	function onStartLightEffect():Void
+	{
+		FlxG.camera.stopFX();
+		lightEffect.visible = true;
 	}
 }

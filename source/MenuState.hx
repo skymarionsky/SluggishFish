@@ -41,6 +41,9 @@ class MenuState extends FlxState
 		title.scale.y = 0.2;
 		tween = FlxTween.multiVar(title.scale, { x:1, y:1 }, 1, { ease: FlxEase.quadOut, complete:onDisplayTitleEnd });
 		add(title);
+		
+		// music
+		//FlxG.sound.play("assets/music/music.mp3",1,true);
 	}
 	
 	private function onDisplayTitleEnd(tween:FlxTween):Void

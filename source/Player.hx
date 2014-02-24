@@ -9,10 +9,10 @@ import flixel.FlxG;
  */
 class Player extends FlxSprite
 {
-	private var _speed:Float = 60.0;
-	private var _maxSpeed:Float = 60.0;
-	private var _buoyancy:Float = -1.5;
-	private var _maxBuoyancy:Float = -50.0;
+	private var _speed:Float = 80.0;
+	private var _maxSpeed:Float = 80.0;
+	private var _buoyancy:Float = -3.0;
+	private var _maxBuoyancy:Float = -80.0;
 	private var _sleepAnimeTiming:Float = -20.0;
 	
 	public var isMoving = false;
@@ -24,8 +24,10 @@ class Player extends FlxSprite
 		animation.add("swim", [0, 1, 2, 3], 10, true);
 		animation.add("sleep", [4, 5, 6, 7], 5, true);
 		animation.add("dead", [8, 9, 10, 11], 15, false);
-		
-		
+		width = 12;
+		height = 8;
+		offset.x = 1;
+		offset.y = 6;
 	}
 	
 	public function toCenter():Void
@@ -36,6 +38,7 @@ class Player extends FlxSprite
 	
 	public function swim():Void
 	{
+		FlxG.sound.play("assets/sounds/jump.wav");
 		
 		if (velocity.y < 0) {
 			velocity.y = _speed;
@@ -62,6 +65,8 @@ class Player extends FlxSprite
 		FlxG.camera.shake(0.01, 0.5);
 		FlxG.camera.flash(0xF0FF0000, 0.5);
 		
+		// sound
+		FlxG.sound.play("assets/sounds/hit.wav");
 		
 	}
 	
