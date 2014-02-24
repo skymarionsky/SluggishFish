@@ -5,4 +5,5 @@
 * Tool Used:
   * Language: Haxe
   * Library/Framework: HaxeFlixel
-  * Sound: sfxr
+  * Sounds: sfxr
+  * Graphics: EDGE
