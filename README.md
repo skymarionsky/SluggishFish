@@ -2,7 +2,7 @@
 
 ## Theme: non-human player
 
-* Tool User:
+* Tool Used:
   * Language: Haxe
-  * Library/Framework: HaxeFlex
+  * Library/Framework: HaxeFlixel
   * Sound: sfxr
